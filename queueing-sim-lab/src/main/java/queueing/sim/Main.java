@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.random.RandomGenerator;
-import queueing.sim.generators.NonHomogeneousArrivalGenerator;
+import queueing.sim.generators.ArribosVuelosHorarioPicoGenerator;
 import queueing.sim.probes.*;
 import queueing.sim.strategies.FirstAvailable;
 import queueing.sim.strategies.ShortestQueue;
@@ -15,9 +15,7 @@ import random.variates.Discrete;
 import random.variates.Uniform;
 
 /**
- * Punto de entrada principal interactivo y unificado para el Laboratorio de
- * Simulacion.
- *
+ * 
  * <p>
  * Opciones del menu:
  * 1. Ejecucion de vuelos de cabotaje (1 pista, 1 cola, 4 semanas).
@@ -186,7 +184,7 @@ public final class Main {
   public static ResultadoCorrida ejecutarSimulacionMultiservidor(
       int cantidadPistas, RandomGenerator rng, boolean imprimirReporte) {
 
-    NonHomogeneousArrivalGenerator arribosGen = new NonHomogeneousArrivalGenerator();
+    ArribosVuelosHorarioPicoGenerator arribosGen = new ArribosVuelosHorarioPicoGenerator();
     TimeGenerator servicioGen = r -> new Uniform(10.0, 25.0, r).sample();
 
     List<QueueConfig> queueConfigs = new ArrayList<>();
