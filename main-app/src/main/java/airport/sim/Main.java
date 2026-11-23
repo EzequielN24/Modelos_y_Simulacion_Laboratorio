@@ -1,13 +1,31 @@
-package queueing.sim;
+package airport.sim;
 
+import airport.sim.generators.ArribosVuelosHorarioPicoGenerator;
+import airport.sim.probes.RunwayDurabilityProbe;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.random.RandomGenerator;
-import queueing.sim.generators.ArribosVuelosHorarioPicoGenerator;
-import queueing.sim.probes.*;
+import queueing.sim.QueueConfig;
+import queueing.sim.QueueingModel;
+import queueing.sim.ServerConfig;
+import queueing.sim.Simulation;
+import queueing.sim.TimeGenerator;
+import queueing.sim.probes.ArrivalCounter;
+import queueing.sim.probes.DepartureCounter;
+import queueing.sim.probes.IdleTime;
+import queueing.sim.probes.MaxIdleTime;
+import queueing.sim.probes.MaxQueueSize;
+import queueing.sim.probes.MaxSystemTime;
+import queueing.sim.probes.MaxWaitingTime;
+import queueing.sim.probes.MinIdleTime;
+import queueing.sim.probes.MinQueueSize;
+import queueing.sim.probes.MinSystemTime;
+import queueing.sim.probes.MinWaitingTime;
+import queueing.sim.probes.Probe;
+import queueing.sim.probes.SystemTime;
+import queueing.sim.probes.WaitingTime;
 import queueing.sim.strategies.FirstAvailable;
 import queueing.sim.strategies.ShortestQueue;
 import queueing.sim.strategies.StrategyBag;
@@ -15,12 +33,14 @@ import random.variates.Discrete;
 import random.variates.Uniform;
 
 /**
- * 
- * <p>
- * Opciones del menu:
- * 1. Ejecucion de vuelos de cabotaje (1 pista, 1 cola, 4 semanas).
- * 2. Probar con 2, 3, 4 y 5 pistas.
- * 3. Ejecutar 50 replicas con intervalos de confianza del 95%.
+ * Punto de entrada de la aplicación de simulación aeroportuaria.
+ *
+ * <p>Opciones del menú:
+ * <ol>
+ *   <li>Ejecución de vuelos de cabotaje (1 pista, 1 cola, 4 semanas).</li>
+ *   <li>Evaluación multiservidor con 2, 3, 4 y 5 pistas.</li>
+ *   <li>Experimentación con 50 réplicas e intervalos de confianza del 95%.</li>
+ * </ol>
  */
 public final class Main {
 
@@ -94,10 +114,7 @@ public final class Main {
     }
   }
 
-  // =================================================================
-  // 1. CABOTAJE (1 PISTA, 1 COLA)
-  // =================================================================
-
+  // Escenario 1: Cabotaje (1 pista, 1 cola)
   public static void ejecutarCabotaje() {
     System.out.println("=================================================================");
     System.out.println("   AEROPUERTO DE VUELOS DE CABOTAJE (1 PISTA, 1 COLA)            ");
@@ -172,10 +189,7 @@ public final class Main {
     System.out.println("=================================================================\n");
   }
 
-  // =================================================================
-  // 2. MULTISERVIDOR (2, 3, 4, 5 PISTAS)
-  // =================================================================
-
+  // Escenario 2: Multiservidor (2, 3, 4 y 5 pistas)
   public static ResultadoCorrida ejecutarMultiservidor(int cantidadPistas, boolean imprimirReporte) {
     RandomGenerator rng = RandomGenerator.of("L64X128MixRandom");
     return ejecutarSimulacionMultiservidor(cantidadPistas, rng, imprimirReporte);
@@ -318,10 +332,7 @@ public final class Main {
         durabilityProbe.durabilidades());
   }
 
-  // =================================================================
-  // 3. EXPERIMENTACION CON 50 REPLICAS
-  // =================================================================
-
+  // Escenario 3: Experimentación con 50 réplicas
   public static void ejecutarReplicas(int cantidadPistas, int totalReplicas) {
     System.out.println("=================================================================");
     System.out.printf("   EXPERIMENTACION CON %d REPLICAS (95%% DE CERTEZA)%n", totalReplicas);
@@ -332,7 +343,7 @@ public final class Main {
 
     for (int r = 1; r <= totalReplicas; r++) {
       RandomGenerator replicaRng = RandomGenerator.of("L64X128MixRandom");
-      replicaRng.nextLong(); // avanzar estado
+      replicaRng.nextLong();
       ResultadoCorrida res = ejecutarSimulacionMultiservidor(cantidadPistas, replicaRng, false);
       resultados.add(res);
     }
@@ -385,26 +396,26 @@ public final class Main {
     System.out.println("================================================================================\n");
   }
 
-  // Calculo de estimacion puntual (media de medias X_doble_barra) e intervalo de
-  // confianza
-  // segun formula de diapositiva 26: [ X_doble_barra - z * (S / raiz(n)),
-  // X_doble_barra + z * (S / raiz(n)) ]
+  /**
+   * Calcula la estimación puntual (media muestral) y el intervalo de confianza
+   * mediante aproximación normal: media +/- z * (s / sqrt(n)).
+   */
   private static Estadisticas calcularEstadisticas(double[] muestra, double z) {
     int n = muestra.length;
     double suma = 0.0;
-    for (double v : muestra)
+    for (double v : muestra) {
       suma += v;
-    double mediaGlobal = suma / n; // X con doble barra (estimacion puntual)
+    }
+    double mediaGlobal = suma / n;
 
     double sumaCuad = 0.0;
     for (double v : muestra) {
       double diff = v - mediaGlobal;
       sumaCuad += diff * diff;
     }
-    double varianza = sumaCuad / (n - 1); // S^2
-    double s = Math.sqrt(varianza); // S (desvio estandar muestral que estima a sigma)
-    double errorEstandar = s / Math.sqrt(n); // S / raiz(n)
-    double margenError = z * errorEstandar; // H = z_(alpha/2) * (S / raiz(n))
+    double varianza = sumaCuad / (n - 1);
+    double s = Math.sqrt(varianza);
+    double margenError = z * (s / Math.sqrt(n));
 
     return new Estadisticas(mediaGlobal, s, mediaGlobal - margenError, mediaGlobal + margenError);
   }

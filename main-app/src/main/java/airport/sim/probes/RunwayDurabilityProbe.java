@@ -1,10 +1,11 @@
-package queueing.sim.probes;
+package airport.sim.probes;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.random.RandomGenerator;
 import queueing.sim.EntityView;
 import queueing.sim.ServerView;
+import queueing.sim.probes.Probe;
 import random.variates.Normal;
 
 /**
