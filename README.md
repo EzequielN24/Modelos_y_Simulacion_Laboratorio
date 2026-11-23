@@ -15,7 +15,7 @@ La entrega está organizada en **3 proyectos Maven (Java 21)**:
 
 1. **`random-variate-gen-lab/`** (`gida:random-variate-gen:1.0-SNAPSHOT`): Librería generadora de variables aleatorias (distribuciones `Uniform`, `Exponential`, `Normal` y `Discrete`).
 2. **`queueing-sim-lab/`** (`gida:queueing-sim:1.0-SNAPSHOT`): Librería del motor de simulación de sistemas de colas orientado a eventos discretos (eventos, FEL, colas, servidores, estrategias y sondas).
-3. **`main-app/`** (`gida:main-app:1.0-SNAPSHOT`): Aplicación principal que consume ambas librerías (`airport.sim.Main`), incluyendo el generador de arribos con horarios pico (`ArribosVuelosHorarioPicoGenerator`) y la probe de desgaste de pistas (`RunwayDurabilityProbe`).
+3. **`main-app/`** (`gida:main-app:1.0-SNAPSHOT`): Aplicación principal que consume ambas librerías (`airport.sim.Main`), incluyendo el generador de arribos con horarios pico (`ArribosVuelosHorarioPicoGenerator`), la probe de desgaste de pistas (`RunwayDurabilityProbe`) y la estrategia de balanceo por durabilidad (`MostDurableServerSelection`).
 
 ---
 
@@ -86,19 +86,23 @@ cd main-app
 ```
 
 El menú ofrece las siguientes opciones:
-1. **Ejecución de cabotaje** (1 pista, 1 cola, horizonte de 4 semanas = 40.320 minutos).
-2. **Probar con 2, 3, 4 y 5 pistas** (arribos con horarios pico, desgaste de suelo y evaluación de restricción de espera máxima de 2 horas).
-3. **50 réplicas** (configuración de 4 pistas con estimación puntual e intervalos de confianza del 95%).
+1. **Ejecución de cabotaje (Etapa 1)** (1 pista, 1 cola, horizonte de 4 semanas = 40.320 minutos).
+2. **Probar con 2, 3, 4 y 5 pistas - Colas individuales (Etapa 2)** (arribos con horarios pico, desgaste de suelo y evaluación de restricción de espera máxima de 2 horas).
+3. **50 réplicas con mejora Etapa 3 (Cola única + Balanceo de desgaste - 3 pistas)** con intervalos de confianza del 95% (`MostDurableServerSelection`).
+4. **50 réplicas con mejora Etapa 3 (Cola única - 3 pistas)** con intervalos de confianza del 95% (`FirstAvailable`).
+5. **50 réplicas línea base Etapa 2 (Colas individuales - 4 pistas)** con intervalos de confianza del 95%.
 0. **Salir**.
 
 ### Modo directo por argumento
 
 También se puede ejecutar cualquier escenario directamente pasando un parámetro:
 
-- `cabotaje` o `1`: ejecuta el escenario de vuelos de cabotaje.
-- `pistas` o `2`: ejecuta las configuraciones de 2, 3, 4 y 5 pistas.
-- `replicas` o `3`: ejecuta las 50 réplicas con intervalos de confianza del 95%.
-- `all` o `todo`: ejecuta los tres escenarios en secuencia.
+- `cabotaje` o `1`: ejecuta el escenario de vuelos de cabotaje (Etapa 1).
+- `pistas` o `2`: ejecuta las configuraciones de 2, 3, 4 y 5 pistas con colas individuales (Etapa 2).
+- `replicas-balanceada` o `3`: ejecuta las 50 réplicas con 3 pistas, cola única y balanceo de desgaste (Etapa 3).
+- `replicas` o `4`: ejecuta las 50 réplicas con 3 pistas y cola única (Etapa 3).
+- `replicas-etapa2` o `5`: ejecuta las 50 réplicas con 4 pistas y colas individuales (línea base Etapa 2).
+- `all` o `todo`: ejecuta cabotaje, 2–5 pistas y las 50 réplicas balanceadas en secuencia.
 - `<N>` (número entero, ej. `4`): ejecuta el escenario multiservidor con `N` pistas.
 
 Ejemplo:
